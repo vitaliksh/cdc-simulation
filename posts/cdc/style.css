@@ -1,0 +1,14 @@
+/* style.css */
+/* CDC article-specific styles */
+.demo-section {
+  margin: 2.5em 0;
+}
+
+.demo-section h2 {
+  margin-bottom: 0.8em;
+}
+
+.demo-intro {
+  margin-bottom: 1em;
+  color: var(--text-muted);
+}

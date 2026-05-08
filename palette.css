@@ -1,0 +1,39 @@
+/* palette.css — single source of all color tokens
+   Edit here to retheme the entire site. */
+:root {
+  /* Article / blog surfaces */
+  --bg:         #FDF6E3;
+  --bg-surface: #EEE8D5;
+  --bg-mid:     #EEE8D5;  /* alias used by root index.html */
+  --bg-dark:    #DDD6C1;  /* alias used by root index.html */
+  --border:     #DDD6C1;
+
+  /* Article text */
+  --text:         #2c2c2c;
+  --text-muted:   #5c5343;
+  --text-heading: #1a1a1a;
+  --heading:      #1a1a1a;  /* alias used by root index.html */
+  --muted:        #A89E84;  /* mid-tone / icon tint / demo frame bg */
+
+  /* Article accent */
+  --accent:       #6b5d3f;
+  --accent-dark:  #4a3f2b;
+
+  /* Demo iframe frame */
+  --demo-frame-bg: #A89E84;
+
+  /* Demo controls — dark panel theme */
+  --demo-bg:         #d1bb90;
+  --demo-surface:    #6B5D4F;
+  --demo-border:     #333;
+  --demo-accent:     #e9622d;
+  --demo-btn:        #325c2e;
+  --demo-text:       #F2C94C;
+  --demo-text-muted: #e04a0e;
+  --demo-on-btn:     #fff;
+  --edit-hint:       #e04a0e;  /* "Click to edit" hint text */
+
+  /* Shared state colors */
+  --ok:    #4D854F;
+  --error: #d32f2f;
+}

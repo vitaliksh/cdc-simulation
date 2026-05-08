@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CDC Demo 1: Single Clock Domain</title>
+<link rel="stylesheet" href="../../../shared/css/demo-controls.css">
+</head>
+<body>
+
+<div class="control-panel-wrapper">
+
+  <div class="top-row">
+    <div class="buttons-box">
+      <button id="btnPlay">START &#9654;</button>
+      <button id="btnReset">NEW GAME &#8635;</button>
+    </div>
+   
+    <div class="sync-box hidden">
+      <div class="sync-label">Clock Domains Relation</div>
+      <div class="toggle-row">
+        <span class="toggle-side-label active" id="labelSync">SYNC</span>
+        <div class="toggle-track" id="syncToggle" title="Switch between Sync and Async mode">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-side-label" id="labelAsync">ASYNC</span>
+      </div>
+    </div>
+
+    <div class="speed-box">
+      <div class="speed-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Animation Speed: <span id="vAnimSpeed">1.0</span></span>
+      </div>
+      <input type="range" id="slAnimSpeed" min="0" max="3" step="0.1" value="1.0">
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="step-box">
+      <div class="step-header">
+        <span>Clock Period:</span>
+        <span id="vStepA">30</span>
+      </div>
+      <input type="range" id="slStepA" min="20" max="60" step="2" value="30">
+    </div>
+   
+    <div class="step-box hidden" id="stepBoxB">
+      <div class="step-header">
+        <span>Clock Period:</span>
+        <span id="vStepB">30</span>
+      </div>
+      <input type="range" id="slStepB" min="20" max="60" step="2" value="30">
+    </div>
+
+    <div class="sound-box">
+      <button id="btnSound" class="btn-sound" title="Sound ON/OFF">&#128263;</button>
+    </div>
+  </div>
+
+  <div class="scrubber-row">
+    <span class="scrubber-label" id="vTimeline">Frame 0 / 0</span>
+    <input type="range" id="slTimeline" min="0" max="1000" step="1" value="0">
+  </div>
+</div>
+
+<div class="canvas-container">
+  <div class="tableau-wrapper a" id="tableauAWrapper">
+    <div class="tableau-title">Source Data (TX) <span id="editHint" style="font-size: 1.1em; color: var(--edit-hint); font-weight: normal; text-transform: none;">— Click to edit</span></div>
+    <div id="tableauA" class="tableau tableau-a"></div>
+  </div>
+
+  <div class="tableau-wrapper" id="tableauBWrapper">
+    <div class="tableau-title">Captured data</div>
+    <div id="tableauB" class="tableau tableau-b"></div>
+  </div>
+
+  <canvas id="view" width="800" height="600"></canvas>
+</div>
+
+<script src="demo1.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clock Domain Crossing — Interactive Guide</title>
+<meta name="description" content="An interactive guide to clock domain crossing (CDC): cause data corruption yourself, then apply synchronizers and FIFOs to fix it.">
+<meta property="og:title" content="Clock Domain Crossing — Interactive Guide">
+<meta property="og:description" content="An interactive guide to clock domain crossing (CDC): cause data corruption yourself, then apply synchronizers and FIFOs to fix it.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="../../shared/css/base.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a href="../../index.html">← Home</a>
+</header>
+
+<article class="article">
+
+<h1>Clock Domain Crossing</h1>
+
+<p class="lead">CDC (clock domain crossing) is what happens when data moves between logic blocks that run on different clocks. It's the number-one reason designs pass simulation but break on real hardware.</p>
+
+<p>The interactive demos below let you cause these failures yourself. Drift two clocks apart. Watch data get missed or duplicated. Then apply the same fixes engineers use — synchronizers, handshakes, and FIFOs — and see the problem disappear.</p>
+
+<p>If you design FPGAs or any multi-clock digital system, this knowledge isn't optional. Start the first demo now — see how clean life is before CDC enters the picture.</p>
+
+<section class="demo-section">
+<h2>Demo 1 — Single Clock Domain</h2>
+
+<p class="demo-intro">Imagine a factory line where everything obeys one shared beat. The conveyor is your processing pipeline, and each ball is a data chunk (a sample, a packet, a token—pick your favorite mental image). Because every stage moves on the same tick, each ball lands exactly where it should—no skips, no doubles, no surprises. This is the "boring" case, and that's the point: when timing is shared, data flow is naturally clean. Play with the controls and watch how predictable it stays. We start here so that when things break later, you'll feel exactly what changed.</p>
+
+<iframe class="demo-frame" src="demos/demo1.html" frameborder="0" scrolling="no"></iframe>
+</section>
+
+<section class="demo-section">
+<h2>Demo 2 — Two Clock Domains</h2>
+
+<p class="demo-intro">Now we split the factory into two rooms, each with its own clock—this is CDC (clock domain crossing). Start in SYNC mode: the clocks match, the balls pass cleanly, and nothing looks dangerous. That smoothness is a trap—it hides the hazard. Flip the toggle to ASYNC, drag the clock-period sliders apart, and watch the handoff fall apart in real time. The receiving side begins sampling at the wrong moment: balls get missed, duplicated, or sliced in half—classic CDC corruption you can now see with your own eyes.</p>
+
+<p>This demo intentionally shows only the observable failure; the deeper electrical demons—setup/hold violations and metastability—live underneath and get their own section next. For now, let the broken transfers sink in. Once the failure feels obvious, the fixes—synchronizers, FIFOs, handshake protocols—will click into place almost naturally.</p>
+
+<iframe class="demo-frame" src="demos/demo2.html" frameborder="0" scrolling="no"></iframe>
+</section>
+
+<section class="demo-section">
+<h2>Demo 3 — Setup &amp; Hold Violations</h2>
+
+<p class="demo-intro">The visual corruption in Demo 2 is dramatic, but the real danger lives one level deeper: setup and hold time violations. Every flip-flop needs data to be stable for a small window around the clock edge — the setup window before, and the hold window after. If data changes inside that window, the flip-flop output becomes unpredictable. The bucket walls now have a gap between them, representing that forbidden timing window. A ball landing in the gap is a data bit that arrived at exactly the wrong moment.</p>
+
+<p>Use the <strong>Setup+Hold Window</strong> slider to widen the gap. When the gap is narrower than the ball, the ball teeters on both walls — this is <em>metastability</em>: the output is neither 0 nor 1, just an unstable in-between voltage. After an unpredictable delay it resolves to one side or the other — sometimes the right answer, sometimes not. When the gap exceeds the ball's diameter, the ball falls straight through: the signal is lost entirely. Real hardware engineers size clock periods, add pipeline stages, and use special synchronizer cells to reduce the probability of entering this zone to near-zero.</p>
+
+<iframe class="demo-frame" src="demos/demo3.html" frameborder="0" scrolling="no"></iframe>
+</section>
+
+</article>
+
+</body>
+</html>
