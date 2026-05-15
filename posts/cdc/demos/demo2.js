@@ -367,6 +367,11 @@ function setPlayButtonVisual(isRunning) {
   }
 }
 
+function setPausedDisabled(disabled) {
+  document.getElementById('slAnimSpeed').disabled = disabled;
+  document.getElementById('slTimeline').disabled = disabled;
+}
+
 function toggleStepControls(disabled) {
   document.getElementById('slStepA').disabled = disabled;
   document.getElementById('slStepB').disabled = disabled || state.isSyncMode;
@@ -688,6 +693,8 @@ function updateBalls() {
 
 const convA = new Conveyor({ startX: 60, startY: 250, L: 300, R: 30, partH: 15 }, 30, true);
 const convB = new Conveyor({ startX: 350, startY: 420, L: 300, R: 30, partH: 15 }, 30, false);
+const CONV_B_BASE_X = convB.geom.startX;
+let convBShift = 0;
 
 function renderTableau(wrapperId, cells, isA) {
   const container = document.getElementById(wrapperId);
@@ -740,6 +747,7 @@ function drawAll() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   convA.draw(ctx);
   convB.draw(ctx);
+  drawConvBDragHint(ctx);
 
   positionTableauBWrapper();
   balls.forEach(b => {
@@ -834,6 +842,7 @@ bindSl('slStepB', convB, 'Wa', 'vStepB', () => {
 
 document.getElementById('btnPlay').onclick = () => {
   if (!state.running) {
+    setPausedDisabled(false);
     clearEndSequenceVisuals();
     document.getElementById('editHint').style.display = 'none';
     if (tableauACells.length === 0) return;
@@ -849,7 +858,8 @@ document.getElementById('btnPlay').onclick = () => {
   } else {
     state.running = false;
     state.paused = true;
-    toggleStepControls(false);
+    toggleStepControls(true);
+    setPausedDisabled(true);
     setPlayButtonVisual(false);
   }
 };
@@ -861,6 +871,7 @@ document.getElementById('btnReset').onclick = () => {
   state.canEdit = true;
   state.paused = false;
   toggleStepControls(false);
+  setPausedDisabled(false);
   setPlayButtonVisual(false);
   clearEndSequenceVisuals();
   
@@ -974,3 +985,150 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// --- CONVEYOR B DRAG ---
+function drawConvBDragHint(ctx) {
+  if (state.running || state.paused) return;
+  const { startX, startY, L, R } = convB.geom;
+  const cy = startY;
+  const blink = Math.floor(Date.now() / 500) % 2 === 0;
+  const alpha = blink ? 0.95 : 0.3;
+  const iw = 30, ih = 20, ir = 4;
+
+  ctx.save();
+
+  function drawShiftIcon(cx, isLeft) {
+    const ix = cx - iw / 2, iy = cy - ih / 2;
+    ctx.globalAlpha = alpha * 0.8;
+    ctx.fillStyle = '#3A0000';
+    ctx.beginPath();
+    ctx.moveTo(ix + ir, iy);
+    ctx.arcTo(ix + iw, iy, ix + iw, iy + ih, ir);
+    ctx.arcTo(ix + iw, iy + ih, ix, iy + ih, ir);
+    ctx.arcTo(ix, iy + ih, ix, iy, ir);
+    ctx.arcTo(ix, iy, ix + iw, iy, ir);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#FF3B3B';
+    ctx.fillStyle = '#FF3B3B';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    const stemLen = 9, headH = 6, headW = 5;
+    if (isLeft) {
+      ctx.beginPath();
+      ctx.moveTo(cx + stemLen / 2, cy);
+      ctx.lineTo(cx - stemLen / 2 + headH, cy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx - stemLen / 2, cy);
+      ctx.lineTo(cx - stemLen / 2 + headH, cy - headW);
+      ctx.lineTo(cx - stemLen / 2 + headH, cy + headW);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(cx - stemLen / 2, cy);
+      ctx.lineTo(cx + stemLen / 2 - headH, cy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + stemLen / 2, cy);
+      ctx.lineTo(cx + stemLen / 2 - headH, cy - headW);
+      ctx.lineTo(cx + stemLen / 2 - headH, cy + headW);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  drawShiftIcon(startX + L * 0.25 + 20, true);
+  drawShiftIcon(startX + L * 0.75 - 20, false);
+
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#FF3B3B';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SHIFT', startX + L / 2, cy);
+
+  ctx.restore();
+}
+
+const _dragB = { active: false, startMouseX: 0, shiftAtStart: 0 };
+
+function _applyConvBShift(raw) {
+  convBShift = Math.max(-80, Math.min(80, raw));
+  const _tab = document.getElementById('tableauB');
+  const _wrp = document.getElementById('tableauBWrapper');
+  if (_tab && _wrp && _wrp.offsetWidth > 0) {
+    const goff = (_tab.offsetWidth || 0) - (4 + TABLEAU_CELL_W / 2);
+    const contW = (canvas.parentElement && canvas.parentElement.offsetWidth) || canvas.width;
+    const dropX = CONV_B_BASE_X + convBShift + convB.geom.L + convB.geom.R + getBallRadiusB();
+    const wLeft = dropX - goff;
+    const wRight = wLeft + _wrp.offsetWidth;
+    if (wRight > contW) convBShift -= Math.ceil(wRight - contW);
+    if (wLeft < 0) convBShift -= Math.floor(wLeft);
+  }
+  convB.geom.startX = CONV_B_BASE_X + convBShift;
+}
+
+function _convBHitTest(mx, my) {
+  const { startX, startY, L, R } = convB.geom;
+  return mx >= startX - R && mx <= startX + L + R && my >= startY - R && my <= startY + R;
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (state.running || state.paused) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+  if (!_convBHitTest(mx, my)) return;
+  _dragB.active = true;
+  _dragB.startMouseX = mx;
+  _dragB.shiftAtStart = convBShift;
+  e.preventDefault();
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+  if (_dragB.active) {
+    _applyConvBShift(_dragB.shiftAtStart + (mx - _dragB.startMouseX));
+    canvas.style.cursor = 'grabbing';
+  } else {
+    canvas.style.cursor = (!state.running && !state.paused && _convBHitTest(mx, my)) ? 'grab' : 'default';
+  }
+});
+
+canvas.addEventListener('mouseup', () => { _dragB.active = false; });
+canvas.addEventListener('mouseleave', () => { _dragB.active = false; });
+
+canvas.addEventListener('touchstart', (e) => {
+  if (state.running || state.paused) return;
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  const mx = (t.clientX - rect.left) * (canvas.width / rect.width);
+  const my = (t.clientY - rect.top) * (canvas.height / rect.height);
+  if (!_convBHitTest(mx, my)) return;
+  _dragB.active = true;
+  _dragB.startMouseX = mx;
+  _dragB.shiftAtStart = convBShift;
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (!_dragB.active) return;
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  const mx = (t.clientX - rect.left) * (canvas.width / rect.width);
+  _applyConvBShift(_dragB.shiftAtStart + (mx - _dragB.startMouseX));
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { _dragB.active = false; });
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  convBShift = 0;
+  convB.geom.startX = CONV_B_BASE_X;
+});

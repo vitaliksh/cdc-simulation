@@ -726,6 +726,7 @@ function updateBalls() {
         // offsetD places the ball at the gap center within the chosen bucket
         // so there is no visual jump (smooth transition from wall to bucket)
         b.offsetD = goLeft ? actualWaB / 2 : -actualWaB / 2;
+        b.bit = Math.floor(Date.now() / 250) % 2 === 0 ? b.bit : (b.bit === '1' ? '0' : '1');
         b.state = 'B';
         b.isSplit = false;
       }
