@@ -369,7 +369,7 @@ function setPlayButtonVisual(isRunning) {
 
 function setPausedDisabled(disabled) {
   document.getElementById('slAnimSpeed').disabled = disabled;
-  document.getElementById('slTimeline').disabled = disabled;
+  document.getElementById('slTimeline').disabled = !disabled;
 }
 
 function toggleStepControls(disabled) {
